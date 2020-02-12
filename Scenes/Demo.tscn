@@ -1,0 +1,59 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+var wall = preload('res://Scenes/Wall.tscn')
+var ballPrefab = preload('res://Scenes/Ball.tscn')
+var chars = preload('res://Scenes/Chars.tscn').instance()
+var world: Node2D
+
+func _ready():
+	world = $World
+	
+	var wtop = wall.instance() as StaticBody2D
+	wtop.position = Vector2(0, -182)
+	wtop.rotation_degrees = 180
+	world.add_child(wtop)
+
+	var wbot = wall.instance() as StaticBody2D
+	wbot.position = Vector2(0, 182)
+	world.add_child(wbot)
+
+	var wleft = wall.instance() as StaticBody2D
+	wleft.position = Vector2(-322, 0)
+	wleft.rotation_degrees = 90
+	world.add_child(wleft)
+
+	var wright = wall.instance() as StaticBody2D
+	wright.position = Vector2(322, 0)
+	wright.rotation_degrees = -90
+	world.add_child(wright)
+
+	var ball = ballPrefab.instance() as KinematicBody2D
+	ball.velocity = Vector2(0, 0)
+	var anim = ball.get_node(\"AnimationPlayer\") as AnimationPlayer
+	anim.play('spin', -1, 4)
+	world.add_child(ball)
+
+	var guy = chars.get_node(\"Lizard\").duplicate()
+	guy.position = Vector2(-100, 0)
+	world.add_child(guy)
+
+	var skele = chars.get_node(\"Skele\").duplicate()
+	skele.position = Vector2(100, -20)
+	world.add_child(skele)
+
+	skele = chars.get_node(\"Skele\").duplicate()
+	skele.position = Vector2(120, 40)
+	world.add_child(skele)
+"
+
+[node name="Demo" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="Camera2D" type="Camera2D" parent="."]
+current = true
+zoom = Vector2( 0.5, 0.5 )
+
+[node name="World" type="Node2D" parent="."]

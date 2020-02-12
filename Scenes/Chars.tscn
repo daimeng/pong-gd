@@ -1,0 +1,316 @@
+[gd_scene load_steps=30 format=2]
+
+[ext_resource path="res://Images/char.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+
+var move_speed = 200
+var sm
+
+func _ready():
+	sm = $AnimationTree.get('parameters/playback')
+
+func _physics_process(delta: float):
+	if Input.is_key_pressed(KEY_SPACE):
+		$AttackPlayer.play('bonk')
+
+	var dx = 0
+	var dy = 0
+	if Input.is_key_pressed(KEY_S):
+		dy += 1
+	if Input.is_key_pressed(KEY_W):
+		dy -= 1
+	if Input.is_key_pressed(KEY_D):
+		dx += 1
+	if Input.is_key_pressed(KEY_A):
+		dx -= 1
+	
+	sm.travel('idle')
+	move_and_collide(Vector2(dx, dy).normalized() * move_speed * delta)
+	if dx != 0 or dy != 0:
+		sm.travel('run')
+
+
+func _on_Bonk_body_entered(body):
+	var force = (position - body.position).normalized()
+	body.on_bonked(Vector2(1, 0), force)
+
+
+func on_bonked(normal: Vector2, force: Vector2):
+	pass
+"
+
+[sub_resource type="Animation" id=2]
+resource_name = "hurt"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 71 ]
+}
+
+[sub_resource type="Animation" id=3]
+length = 0.8
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 63, 64, 65, 66 ]
+}
+
+[sub_resource type="Animation" id=4]
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 67, 68, 69, 70 ]
+}
+
+[sub_resource type="AnimationNodeAnimation" id=5]
+animation = "hurt"
+
+[sub_resource type="AnimationNodeAnimation" id=6]
+animation = "idle"
+
+[sub_resource type="AnimationNodeAnimation" id=7]
+animation = "run"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=8]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=9]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=10]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=11]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=12]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=13]
+
+[sub_resource type="AnimationNodeStateMachine" id=14]
+states/hurt/node = SubResource( 5 )
+states/hurt/position = Vector2( 120, 221 )
+states/idle/node = SubResource( 6 )
+states/idle/position = Vector2( 120, 76 )
+states/run/node = SubResource( 7 )
+states/run/position = Vector2( 314, 76 )
+transitions = [ "idle", "hurt", SubResource( 8 ), "hurt", "idle", SubResource( 9 ), "idle", "run", SubResource( 10 ), "run", "idle", SubResource( 11 ), "run", "hurt", SubResource( 12 ), "hurt", "run", SubResource( 13 ) ]
+start_node = "idle"
+
+[sub_resource type="AnimationNodeStateMachinePlayback" id=15]
+
+[sub_resource type="Animation" id=30]
+resource_name = "bonk"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Bonk/CollisionShape2D:disabled")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0.2, 0.6 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ false, true ]
+}
+tracks/1/type = "animation"
+tracks/1/path = NodePath("AnimationPlayer")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = false
+tracks/1/keys = {
+"clips": PoolStringArray( "[stop]", "[stop]" ),
+"times": PoolRealArray( 0, 0.5 )
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0.1, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ 71, 71 ]
+}
+
+[sub_resource type="CapsuleShape2D" id=17]
+radius = 8.0
+height = 4.0
+
+[sub_resource type="CapsuleShape2D" id=18]
+height = 10.0
+
+[sub_resource type="GDScript" id=29]
+script/source = "extends KinematicBody2D
+
+var move_speed = 200
+var waypoint = Vector2()
+var wander_cd = 3
+
+func _ready():
+	randomize()
+	waypoint = Vector2(rand_range(-100, 100), rand_range(-100, 100))
+
+func _physics_process(delta: float):
+	if wander_cd > 0:
+		wander_cd -= delta
+	else:
+		randomize()
+		waypoint = Vector2(rand_range(-100, 100), rand_range(-100, 100))
+		wander_cd = 3
+
+	var dir = waypoint - position
+	if dir.length_squared() < 5:
+		position = waypoint
+	else:
+		move_and_collide(dir.normalized() * move_speed * delta)
+
+
+func on_bonked(normal: Vector2, force: Vector2):
+	pass
+"
+
+[sub_resource type="Animation" id=20]
+resource_name = "idle"
+length = 0.8
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 72, 73, 74, 75 ]
+}
+
+[sub_resource type="Animation" id=21]
+resource_name = "run"
+length = 0.8
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 76, 77, 78, 79 ]
+}
+
+[sub_resource type="AnimationNodeAnimation" id=22]
+animation = "idle"
+
+[sub_resource type="AnimationNodeAnimation" id=23]
+animation = "run"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=24]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=25]
+
+[sub_resource type="AnimationNodeStateMachine" id=26]
+states/idle/node = SubResource( 22 )
+states/idle/position = Vector2( 152, 55 )
+states/run/node = SubResource( 23 )
+states/run/position = Vector2( 318, 55 )
+transitions = [ "idle", "run", SubResource( 24 ), "run", "idle", SubResource( 25 ) ]
+start_node = "idle"
+
+[sub_resource type="AnimationNodeStateMachinePlayback" id=27]
+
+[sub_resource type="CapsuleShape2D" id=28]
+radius = 8.0
+height = 1.0
+
+[node name="Chars" type="Node2D"]
+
+[node name="Lizard" type="KinematicBody2D" parent="."]
+position = Vector2( -40, 0 )
+script = SubResource( 1 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Lizard"]
+anims/hurt = SubResource( 2 )
+anims/idle = SubResource( 3 )
+anims/run = SubResource( 4 )
+
+[node name="AnimationTree" type="AnimationTree" parent="Lizard"]
+tree_root = SubResource( 14 )
+anim_player = NodePath("../AnimationPlayer")
+active = true
+parameters/playback = SubResource( 15 )
+
+[node name="AttackPlayer" type="AnimationPlayer" parent="Lizard"]
+anims/bonk = SubResource( 30 )
+
+[node name="Sprite" type="Sprite" parent="Lizard"]
+position = Vector2( 0, -8 )
+texture = ExtResource( 1 )
+vframes = 21
+hframes = 9
+frame = 64
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Lizard"]
+shape = SubResource( 17 )
+
+[node name="Bonk" type="Area2D" parent="Lizard"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Lizard/Bonk"]
+position = Vector2( 10, 0 )
+shape = SubResource( 18 )
+disabled = true
+
+[node name="Skele" type="KinematicBody2D" parent="."]
+script = SubResource( 29 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Skele"]
+anims/idle = SubResource( 20 )
+anims/run = SubResource( 21 )
+
+[node name="AnimationTree" type="AnimationTree" parent="Skele"]
+tree_root = SubResource( 26 )
+anim_player = NodePath("../AnimationPlayer")
+active = true
+parameters/playback = SubResource( 27 )
+
+[node name="Sprite" type="Sprite" parent="Skele"]
+position = Vector2( 0, -8 )
+texture = ExtResource( 1 )
+vframes = 21
+hframes = 9
+frame = 74
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Skele"]
+shape = SubResource( 28 )
+[connection signal="body_entered" from="Lizard/Bonk" to="Lizard" method="_on_Bonk_body_entered"]

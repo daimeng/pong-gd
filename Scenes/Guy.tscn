@@ -1,0 +1,71 @@
+[gd_scene load_steps=5 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+
+var move_speed = 200
+
+func _physics_process(delta: float):
+	if Input.is_key_pressed(KEY_SPACE):
+		$AnimationPlayer.play('bonk')
+
+	var dx = 0
+	var dy = 0
+	if Input.is_key_pressed(KEY_S):
+		dy += 1
+	if Input.is_key_pressed(KEY_W):
+		dy -= 1
+	if Input.is_key_pressed(KEY_D):
+		dx += 1
+	if Input.is_key_pressed(KEY_A):
+		dx -= 1
+	
+	move_and_collide(Vector2(dx, dy).normalized() * move_speed * delta)
+
+
+func _on_Bonk_body_entered(body):
+	var force = (position - body.position).normalized()
+	body.on_bonked(Vector2(1, 0), force)
+
+
+func on_bonked(normal: Vector2, force: Vector2):
+	pass
+"
+
+[sub_resource type="Animation" id=2]
+resource_name = "bonk"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("Bonk/CollisionShape2D:disabled")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0.2, 0.5 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ false, true ]
+}
+
+[sub_resource type="CapsuleShape2D" id=3]
+height = 0.0
+
+[sub_resource type="CircleShape2D" id=4]
+radius = 20.0
+
+[node name="Guy" type="KinematicBody2D"]
+position = Vector2( -100, 0 )
+script = SubResource( 1 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/bonk = SubResource( 2 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 3 )
+
+[node name="Bonk" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bonk"]
+shape = SubResource( 4 )
+[connection signal="body_entered" from="Bonk" to="." method="_on_Bonk_body_entered"]
